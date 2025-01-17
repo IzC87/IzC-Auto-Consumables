@@ -1,0 +1,8 @@
+## Interface: 11505
+
+## Title: IzCAutoConsumables
+## Author: IzC
+## Version: 1.0
+## SavedVariables: IzCAutoConsumables_SavedVars
+
+IzCAutoConsumables.lua

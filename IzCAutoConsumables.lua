@@ -65,16 +65,8 @@ function IzCAutoConsumables_GetBestConsumables()
 
             if item ~= nil then
 
-                
-                -- IzCAutoConsumables_PrintDebug(item["itemName"])
-                -- IzCAutoConsumables_PrintDebug(tostring(IzCAutoConsumables_SavedVars.EatRawFish))
-                -- IzCAutoConsumables_PrintDebug(tostring(string.find(item["itemName"], "raw") == nil))
-                -- IzCAutoConsumables_PrintDebug(tostring(item["itemName"] ~= "Raw Black Truffle"))
-
-                if IzCAutoConsumables_SavedVars.EatRawFish or (string.find(item["itemName"], "raw") == nil and item["itemName"] ~= "Raw Black Truffle") then
+                if IzCAutoConsumables_SavedVars.EatRawFish or (string.find(item["itemName"], "Raw") == nil and item["itemName"] ~= "Raw Black Truffle") then
                         
-                    -- IzCAutoConsumables_PrintDebug("Passed")
-
                     _,_,_,_,_,itemType,itemSubType=GetItemInfo(item["itemName"])
                         
                     if itemType == "Consumable" and itemSubType == "Consumable" then

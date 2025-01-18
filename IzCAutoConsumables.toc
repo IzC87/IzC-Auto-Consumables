@@ -2,7 +2,7 @@
 
 ## Title: IzCAutoConsumables
 ## Author: IzC
-## Version: 1.0
+## Version: 1.0.4
 ## SavedVariables: IzCAutoConsumables_SavedVars
 
 ## X-Curse-Project-ID: 1180339

@@ -8,3 +8,6 @@
 ## X-Curse-Project-ID: 1180339
 
 IzCAutoConsumables.lua
+
+localization.core.lua
+localization.de.lua

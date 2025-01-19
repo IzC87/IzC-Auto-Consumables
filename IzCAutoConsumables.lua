@@ -1,4 +1,5 @@
 -- Globals Section
+local _, L = ...;
 local MacroNames = {
     Bandage = "IzCBandage",
     Food = "IzCFood",
@@ -67,11 +68,11 @@ function IzCAutoConsumables_GetBestConsumables()
 
             if item ~= nil then
 
-                if IzCAutoConsumables_SavedVars.EatRawFish or (string.find(item["itemName"], "Raw") == nil and item["itemName"] ~= "Raw Black Truffle") then
+                if IzCAutoConsumables_SavedVars.EatRawFish or (string.find(item["itemName"], L["Raw"]) == nil and item["itemName"] ~= L["Raw Black Truffle"]) then
                         
                     _,_,_,_,_,itemType,itemSubType=GetItemInfo(item["itemName"])
                         
-                    if itemType == "Consumable" and itemSubType == "Consumable" then
+                    if itemType == L["Consumable"] and itemSubType == L["Consumable"] then
 
                         hiddenToolTip:ClearLines()
                         hiddenToolTip:SetHyperlink(item["hyperlink"])
@@ -90,32 +91,32 @@ function IzCAutoConsumables_GetBestConsumables()
                             end
                             
                             if text ~= nil then
-                                if string.match(text, 'Requires Level') then
+                                if string.match(text, L['Requires Level']) then
                                     possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
                                 end
                                 
-                                if string.match(text, 'Requires First Aid') then
+                                if string.match(text, L['Requires First Aid']) then
                                     possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
                                 end
 
-                                if string.find(text, "Must remain seated") then
-                                    if string.find(text, "become well fed and gain") and string.find(text, "Stamina and Spirit for") then
+                                if string.find(text, L["Must remain seated"]) then
+                                    if string.find(text, L["become well fed and gain"]) and string.find(text, L["Stamina and Spirit for"]) then
                                         possibleMatch.Consumable = MacroNames.BuffFood;
                                         IzCAutoConsumables_PrintDebug("Buff Food: "..item["itemName"])
-                                    elseif string.match(text, 'Use: Restores %d+ mana over') then
+                                    elseif string.match(text, L['Use: Restores %d+ mana over']) then
                                         possibleMatch.Consumable = MacroNames.Drink;
                                         IzCAutoConsumables_PrintDebug("Drink: "..item["itemName"])
                                     else
                                         possibleMatch.Consumable = MacroNames.Food;
                                         IzCAutoConsumables_PrintDebug("Food: "..item["itemName"])
                                     end
-                                elseif string.match(text, 'Use: Restores %d+ to %d+ health') then
+                                elseif string.match(text, L['Use: Restores %d+ to %d+ health']) then
                                     possibleMatch.Consumable = MacroNames.Potion;
                                     IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
-                                elseif string.match(text, 'Use: Restores %d+ to %d+ mana') then
+                                elseif string.match(text, L['Use: Restores %d+ to %d+ mana']) then
                                     possibleMatch.Consumable = MacroNames.ManaPotion;
                                     IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
-                                elseif string.match(text, 'Use: Heals %d+ damage over') then
+                                elseif string.match(text, L['Use: Heals %d+ damage over']) then
                                     possibleMatch.Consumable = MacroNames.Bandage;
                                     IzCAutoConsumables_PrintDebug("Bandage: "..item["itemName"])
                                 end
@@ -138,11 +139,11 @@ function IzCAutoConsumables_GetBestConsumables()
                                     IzCAutoConsumables_PrintDebug("No consumable set for: "..possibleMatch.Consumable.." updating it with "..possibleMatch.ItemName)
                                     bestConsumables[possibleMatch.Consumable] = possibleMatch;
 
-                                elseif IzCAutoConsumables_SavedVars.PrioConjured and string.match(bestConsumables[possibleMatch.Consumable].ItemName, 'Conjured') then
+                                elseif IzCAutoConsumables_SavedVars.PrioConjured and string.match(bestConsumables[possibleMatch.Consumable].ItemName, L['Conjured']) then
                                     -- Do Nothing
                                     IzCAutoConsumables_PrintDebug("Prioritize Conjured food "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
 
-                                elseif IzCAutoConsumables_SavedVars.PrioConjured and string.match(possibleMatch.ItemName, 'Conjured') then
+                                elseif IzCAutoConsumables_SavedVars.PrioConjured and string.match(possibleMatch.ItemName, L['Conjured']) then
                                     bestConsumables[possibleMatch.Consumable] = possibleMatch;
                                     IzCAutoConsumables_PrintDebug("2 - Prioritize Conjured food "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
 

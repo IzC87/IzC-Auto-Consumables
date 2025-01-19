@@ -1,10 +1,12 @@
 -- Globals Section
-local IzCAutoConsumables_BandageMacroName = "IzCBandage";
-local IzCAutoConsumables_FoodMacroName = "IzCFood";
-local IzCAutoConsumables_DrinkMacroName = "IzCDrink";
-local IzCAutoConsumables_BuffFoodMacroName = "IzCBuffFood";
-local IzCAutoConsumables_PotionMacroName = "IzCPotion";
-local IzCAutoConsumables_ManaPotionMacroName = "IzCManaPotion";
+local MacroNames = {
+    Bandage = "IzCBandage",
+    Food = "IzCFood",
+    Drink = "IzCDrink",
+    BuffFood = "IzCBuffFood",
+    Potion = "IzCPotion",
+    ManaPotion = "IzCManaPotion"
+}
 
 local IzCAutoConsumables_TargetTrigger = GetTime();
 local IzCAutoConsumables_TriggerWaitTime = 2;
@@ -98,23 +100,23 @@ function IzCAutoConsumables_GetBestConsumables()
 
                                 if string.find(text, "Must remain seated") then
                                     if string.find(text, "become well fed and gain") and string.find(text, "Stamina and Spirit for") then
-                                        possibleMatch.Consumable = IzCAutoConsumables_BuffFoodMacroName;
+                                        possibleMatch.Consumable = MacroNames.BuffFood;
                                         IzCAutoConsumables_PrintDebug("Buff Food: "..item["itemName"])
                                     elseif string.match(text, 'Use: Restores %d+ mana over') then
-                                        possibleMatch.Consumable = IzCAutoConsumables_DrinkMacroName;
+                                        possibleMatch.Consumable = MacroNames.Drink;
                                         IzCAutoConsumables_PrintDebug("Drink: "..item["itemName"])
                                     else
-                                        possibleMatch.Consumable = IzCAutoConsumables_FoodMacroName;
+                                        possibleMatch.Consumable = MacroNames.Food;
                                         IzCAutoConsumables_PrintDebug("Food: "..item["itemName"])
                                     end
                                 elseif string.match(text, 'Use: Restores %d+ to %d+ health') then
-                                    possibleMatch.Consumable = IzCAutoConsumables_PotionMacroName;
+                                    possibleMatch.Consumable = MacroNames.Potion;
                                     IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
                                 elseif string.match(text, 'Use: Restores %d+ to %d+ mana') then
-                                    possibleMatch.Consumable = IzCAutoConsumables_ManaPotionMacroName;
+                                    possibleMatch.Consumable = MacroNames.ManaPotion;
                                     IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
                                 elseif string.match(text, 'Use: Heals %d+ damage over') then
-                                    possibleMatch.Consumable = IzCAutoConsumables_BandageMacroName;
+                                    possibleMatch.Consumable = MacroNames.Bandage;
                                     IzCAutoConsumables_PrintDebug("Bandage: "..item["itemName"])
                                 end
                             end
@@ -129,7 +131,7 @@ function IzCAutoConsumables_GetBestConsumables()
 
                             IzCAutoConsumables_PrintDebug("Found possible Consumable: "..possibleMatch.ItemName)
 
-                            if (possibleMatch.LevelRequired <= UnitLevel("Player")) or (possibleMatch.Consumable == IzCAutoConsumables_BandageMacroName) then
+                            if (possibleMatch.LevelRequired <= UnitLevel("Player")) or (possibleMatch.Consumable == MacroNames.Bandage) then
 
                                 if not bestConsumables[possibleMatch.Consumable] then
 
@@ -181,6 +183,17 @@ end
 -----------------------
 function IzCAutoConsumables_EventHandler(event, ...)
     
+    -- Create Macros
+    if (event == "PLAYER_ENTERING_WORLD") then
+        for k,v in pairs(MacroNames) do
+            local macroExists = GetMacroBody(v);
+            if not macroExists then
+                IzCAutoConsumables_PrintDebug("No macro for "..v.." creating it");
+                CreateMacro(v, "INV_MISC_QUESTIONMARK", "", false)
+            end
+        end
+    end
+
     IzCAutoConsumables_PrintDebug(event)
 
     -- Don't do anything if player is in combat

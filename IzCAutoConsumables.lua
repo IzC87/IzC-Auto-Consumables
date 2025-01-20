@@ -121,7 +121,7 @@ function IzCAutoConsumables_GetBestConsumables()
                                         IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
                                     elseif string.match(text, L['Use: Restores %d+ to %d+ mana']) then
                                         possibleMatch.Consumable = MacroNames.ManaPotion;
-                                        IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
+                                        IzCAutoConsumables_PrintDebug("Mana Potion: "..item["itemName"])
                                     elseif string.match(text, L['Use: Heals %d+ damage over']) then
                                         possibleMatch.Consumable = MacroNames.Bandage;
                                         IzCAutoConsumables_PrintDebug("Bandage: "..item["itemName"])

@@ -6,7 +6,8 @@ local MacroNames = {
     Drink = "IzCDrink",
     BuffFood = "IzCBuffFood",
     Potion = "IzCPotion",
-    ManaPotion = "IzCManaPotion"
+    ManaPotion = "IzCManaPotion",
+    Healthstone = "IzCHealthstone"
 }
 
 local IzCAutoConsumables_TargetTrigger = GetTime();
@@ -28,9 +29,6 @@ workerFrame:SetScript("OnEvent", function(self, event, ...) IzCAutoConsumables_E
 workerFrame:RegisterEvent("BAG_UPDATE");
 workerFrame:RegisterEvent("PLAYER_ENTERING_WORLD");
 
--- Saved Settings
-IzCAutoConsumables_SavedVars = IzCAutoConsumables_SavedVars or {}
-
 function IzCAutoConsumables_UpdateMacros()
 
     -- Get a list of the best usable consumables
@@ -38,7 +36,10 @@ function IzCAutoConsumables_UpdateMacros()
 
     for k,v in pairs(bestConsumable) do
         IzCAutoConsumables_PrintDebug(v.ItemName);
-        IzCAutoConsumables_UpdateMacro(k, v.ItemName);
+
+        if (not IzCAutoConsumables_SavedVars[k]) then
+            IzCAutoConsumables_UpdateMacro(k, v.ItemName);
+        end
     end
 end
 
@@ -81,44 +82,50 @@ function IzCAutoConsumables_GetBestConsumables()
                         possibleMatch.ItemName = item["itemName"];
                         possibleMatch.ItemStackCount = tonumber(item["stackCount"]);
                         
-                        for i=1,hiddenToolTip:NumLines() do
-                            
-                            local mytext = getglobal("hiddenToolTipTextLeft" .. i)
-                            local text = nil
-                            
-                            if mytext ~= nil then
-                                text = mytext:GetText()
-                            end
-                            
-                            if text ~= nil then
-                                if string.match(text, L['Requires Level']) then
-                                    possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
+                        if (possibleMatch.ItemName == L["Healthstone"]) then
+                            possibleMatch.Consumable = MacroNames.Healthstone;
+                            IzCAutoConsumables_PrintDebug("Healthstone")
+                            bestConsumables[possibleMatch.Consumable] = possibleMatch;
+                        else
+                            for i=1,hiddenToolTip:NumLines() do
+                                
+                                local mytext = getglobal("hiddenToolTipTextLeft" .. i)
+                                local text = nil
+                                
+                                if mytext ~= nil then
+                                    text = mytext:GetText()
                                 end
                                 
-                                if string.match(text, L['Requires First Aid']) then
-                                    possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
-                                end
-
-                                if string.find(text, L["Must remain seated"]) then
-                                    if string.find(text, L["become well fed and gain"]) and string.find(text, L["Stamina and Spirit for"]) then
-                                        possibleMatch.Consumable = MacroNames.BuffFood;
-                                        IzCAutoConsumables_PrintDebug("Buff Food: "..item["itemName"])
-                                    elseif string.match(text, L['Use: Restores %d+ mana over']) then
-                                        possibleMatch.Consumable = MacroNames.Drink;
-                                        IzCAutoConsumables_PrintDebug("Drink: "..item["itemName"])
-                                    else
-                                        possibleMatch.Consumable = MacroNames.Food;
-                                        IzCAutoConsumables_PrintDebug("Food: "..item["itemName"])
+                                if text ~= nil then
+                                    if string.match(text, L['Requires Level']) then
+                                        possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
                                     end
-                                elseif string.match(text, L['Use: Restores %d+ to %d+ health']) then
-                                    possibleMatch.Consumable = MacroNames.Potion;
-                                    IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
-                                elseif string.match(text, L['Use: Restores %d+ to %d+ mana']) then
-                                    possibleMatch.Consumable = MacroNames.ManaPotion;
-                                    IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
-                                elseif string.match(text, L['Use: Heals %d+ damage over']) then
-                                    possibleMatch.Consumable = MacroNames.Bandage;
-                                    IzCAutoConsumables_PrintDebug("Bandage: "..item["itemName"])
+                                    
+                                    if string.match(text, L['Requires First Aid']) then
+                                        possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
+                                    end
+
+                                    if string.find(text, L["Must remain seated"]) then
+                                        if string.find(text, L["become well fed and gain"]) and string.find(text, L["Stamina and Spirit for"]) then
+                                            possibleMatch.Consumable = MacroNames.BuffFood;
+                                            IzCAutoConsumables_PrintDebug("Buff Food: "..item["itemName"])
+                                        elseif string.match(text, L['Use: Restores %d+ mana over']) then
+                                            possibleMatch.Consumable = MacroNames.Drink;
+                                            IzCAutoConsumables_PrintDebug("Drink: "..item["itemName"])
+                                        else
+                                            possibleMatch.Consumable = MacroNames.Food;
+                                            IzCAutoConsumables_PrintDebug("Food: "..item["itemName"])
+                                        end
+                                    elseif string.match(text, L['Use: Restores %d+ to %d+ health']) then
+                                        possibleMatch.Consumable = MacroNames.Potion;
+                                        IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
+                                    elseif string.match(text, L['Use: Restores %d+ to %d+ mana']) then
+                                        possibleMatch.Consumable = MacroNames.ManaPotion;
+                                        IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
+                                    elseif string.match(text, L['Use: Heals %d+ damage over']) then
+                                        possibleMatch.Consumable = MacroNames.Bandage;
+                                        IzCAutoConsumables_PrintDebug("Bandage: "..item["itemName"])
+                                    end
                                 end
                             end
                         end
@@ -187,10 +194,12 @@ function IzCAutoConsumables_EventHandler(event, ...)
     -- Create Macros
     if (event == "PLAYER_ENTERING_WORLD") then
         for k,v in pairs(MacroNames) do
-            local macroExists = GetMacroBody(v);
-            if not macroExists then
-                IzCAutoConsumables_PrintDebug("No macro for "..v.." creating it");
-                CreateMacro(v, "INV_MISC_QUESTIONMARK", "", false)
+            if (not IzCAutoConsumables_SavedVars[k]) then
+                local macroExists = GetMacroBody(v);
+                if not macroExists then
+                    IzCAutoConsumables_PrintDebug("No macro for "..v.." creating it");
+                    CreateMacro(v, "INV_MISC_QUESTIONMARK", "", false)
+                end
             end
         end
     end
@@ -211,8 +220,6 @@ function IzCAutoConsumables_EventHandler(event, ...)
 
     IzCAutoConsumables_TargetTrigger = GetTime() + IzCAutoConsumables_TriggerWaitTime;
     IzCAutoConsumables_RegisterOnUpdate()
-
-    IzCAutoConsumables_UpdateMacros();
 end
 
 function IzCAutoConsumables_RegisterEvent(event)
@@ -294,15 +301,24 @@ local function CreateCheckBox(variable, name, tooltip, category, defaultValue)
         IzCAutoConsumables_SavedVars[variable] = value
     end
 
-    local setting = Settings.RegisterProxySetting(category, variable, type(defaultValue), name, defaultValue, GetValue, SetValue)
+    local setting = Settings.RegisterProxySetting(category, variable, type(false), name, defaultValue, GetValue, SetValue)
     setting:SetValueChangedCallback(OnSettingChanged)
 
     Settings.CreateCheckbox(category, setting, tooltip)
 end
 
 do
-    CreateCheckBox("PrioConjured", "Prioritize Conjured Food", "Prioritize using Conjured consumables regardless of their level.", category, true)
-    CreateCheckBox("EatRawFish", "Eat raw fish", "Whether or not we should allow eating of raw fish or not.", category, false)
+    CreateCheckBox("PrioConjured", "Prioritize Conjured Food", "Prioritize using Conjured consumables regardless of their level.", category, false)
+    CreateCheckBox("EatRawFish", "Eat raw fish", "Whether or not we should allow eating of raw fish.", category, false)
+    
+    CreateCheckBox(MacroNames.Healthstone, "Disable Healthstone Macro", "Whether or not we should create a macro for Healthstone.", category, false)
+    CreateCheckBox(MacroNames.Bandage, "Disable Bandage Macro", "Whether or not we should create a macro for Bandages.", category, false)
+    CreateCheckBox(MacroNames.Food, "Disable Food Macro", "Whether or not we should create a macro for Food.", category, false)
+    CreateCheckBox(MacroNames.Drink, "Disable Drink Macro", "Whether or not we should create a macro for Drink.", category, false)
+    CreateCheckBox(MacroNames.BuffFood, "Disable BuffFood Macro", "Whether or not we should create a macro for BuffFood.", category, false)
+    CreateCheckBox(MacroNames.Potion, "Disable Potion Macro", "Whether or not we should create a macro for Potion.", category, false)
+    CreateCheckBox(MacroNames.ManaPotion, "Disable Mana Potion Macro", "Whether or not we should create a macro for Mana Potion.", category, false)
+
     CreateCheckBox("Debug", "Debug Mode", "Print debug statements?", category, false)
 end
 

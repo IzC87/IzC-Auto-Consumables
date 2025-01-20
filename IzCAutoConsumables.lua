@@ -82,7 +82,7 @@ function IzCAutoConsumables_GetBestConsumables()
                         possibleMatch.ItemName = item["itemName"];
                         possibleMatch.ItemStackCount = tonumber(item["stackCount"]);
                         
-                        if (possibleMatch.ItemName == L["Healthstone"]) then
+                        if string.match(possibleMatch.ItemName, L['Healthstone']) then
                             possibleMatch.Consumable = MacroNames.Healthstone;
                             IzCAutoConsumables_PrintDebug("Healthstone")
                             bestConsumables[possibleMatch.Consumable] = possibleMatch;

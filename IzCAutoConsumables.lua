@@ -64,125 +64,129 @@ function IzCAutoConsumables_GetBestConsumables()
     local bestConsumables = {};
     for bag=0,NUM_BAG_SLOTS do
         for slot=1,C_Container.GetContainerNumSlots(bag) do
-
+            
             local item = C_Container.GetContainerItemInfo(bag,slot)
 
             if item ~= nil then
+                local possibleMatch = IzCAutoConsumables_GetPossibleMatch(item);
+                if (possibleMatch == nil) then
+                    
+                elseif not bestConsumables[possibleMatch.Consumable] then
+                    IzCAutoConsumables_PrintDebug("First find for Consumable: "..possibleMatch.Consumable)
+                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
 
-                if IzCAutoConsumables_SavedVars.EatRawFish or (string.find(item["itemName"], L["Raw"]) == nil and item["itemName"] ~= L["Raw Black Truffle"]) then
-                        
-                    _,_,_,_,_,itemType,itemSubType=GetItemInfo(item["itemName"])
-                        
-                    if itemType == L["Consumable"] and itemSubType == L["Consumable"] then
+                elseif IzCAutoConsumables_SavedVars.PrioConjured and string.match(possibleMatch.ItemName, L['Conjured']) then
+                    IzCAutoConsumables_PrintDebug("Prioritize Conjured food "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
+                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
 
-                        hiddenToolTip:ClearLines()
-                        hiddenToolTip:SetHyperlink(item["hyperlink"])
+                elseif bestConsumables[possibleMatch.Consumable].LevelRequired < possibleMatch.LevelRequired then
+                    IzCAutoConsumables_PrintDebug("Higher level food: "..possibleMatch.ItemName.." is better than: "..bestConsumables[possibleMatch.Consumable].ItemName);
+                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
 
-                        local possibleMatch = {}
-                        possibleMatch.ItemName = item["itemName"];
-                        possibleMatch.ItemStackCount = tonumber(item["stackCount"]);
-                        
-                        if string.match(possibleMatch.ItemName, L['Healthstone']) then
-                            possibleMatch.Consumable = MacroNames.Healthstone;
-                            IzCAutoConsumables_PrintDebug("Healthstone")
-                            bestConsumables[possibleMatch.Consumable] = possibleMatch;
-                        else
-                            for i=1,hiddenToolTip:NumLines() do
-                                
-                                local mytext = getglobal("hiddenToolTipTextLeft" .. i)
-                                local text = nil
-                                
-                                if mytext ~= nil then
-                                    text = mytext:GetText()
-                                end
-                                
-                                if text ~= nil then
-                                    if string.match(text, L['Requires Level']) then
-                                        possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
-                                    end
-                                    
-                                    if string.match(text, L['Requires First Aid']) then
-                                        possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
-                                    end
-                                    
-                                    if string.find(text, L["Must remain seated"]) then
-                                        if string.find(text, L["become well fed and gain"]) and string.find(text, L["Stamina and Spirit for"]) then
-                                            possibleMatch.Consumable = MacroNames.BuffFood;
-                                            i = hiddenToolTip:NumLines();
-                                            IzCAutoConsumables_PrintDebug("Buff Food: "..item["itemName"])
-                                        elseif string.match(text, L['Use: Restores %d+ mana over']) then
-                                            possibleMatch.Consumable = MacroNames.Drink;
-                                            i = hiddenToolTip:NumLines();
-                                            IzCAutoConsumables_PrintDebug("Drink: "..item["itemName"])
-                                        else
-                                            possibleMatch.Consumable = MacroNames.Food;
-                                            i = hiddenToolTip:NumLines();
-                                            IzCAutoConsumables_PrintDebug("Food: "..item["itemName"])
-                                        end
-                                    elseif string.match(text, L['Use: Restores %d+ to %d+ health']) then
-                                        possibleMatch.Consumable = MacroNames.Potion;
-                                        i = hiddenToolTip:NumLines();
-                                        IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
-                                    elseif string.match(text, L['Use: Restores %d+ to %d+ mana']) then
-                                        possibleMatch.Consumable = MacroNames.ManaPotion;
-                                        i = hiddenToolTip:NumLines();
-                                        IzCAutoConsumables_PrintDebug("Mana Potion: "..item["itemName"])
-                                    elseif string.match(text, L['Use: Heals %d+ damage over']) then
-                                        possibleMatch.Consumable = MacroNames.Bandage;
-                                        i = hiddenToolTip:NumLines();
-                                        IzCAutoConsumables_PrintDebug("Bandage: "..item["itemName"])
-                                    end
-                                end
-                            end
-                        end
-                        
-                        if not possibleMatch.LevelRequired then
-                            possibleMatch.LevelRequired = 1
-                        end
-
-                        --#region
-                        if possibleMatch.LevelRequired and possibleMatch.Consumable and possibleMatch.ItemStackCount then
-
-                            IzCAutoConsumables_PrintDebug("Found possible Consumable: "..possibleMatch.ItemName)
-
-                            if (possibleMatch.LevelRequired <= UnitLevel("Player")) or (possibleMatch.Consumable == MacroNames.Bandage) then
-
-                                if not bestConsumables[possibleMatch.Consumable] then
-
-                                    IzCAutoConsumables_PrintDebug("No consumable set for: "..possibleMatch.Consumable.." updating it with "..possibleMatch.ItemName)
-                                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
-
-                                elseif IzCAutoConsumables_SavedVars.PrioConjured and string.match(bestConsumables[possibleMatch.Consumable].ItemName, L['Conjured']) then
-                                    -- Do Nothing
-                                    IzCAutoConsumables_PrintDebug("Prioritize Conjured food "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
-
-                                elseif IzCAutoConsumables_SavedVars.PrioConjured and string.match(possibleMatch.ItemName, L['Conjured']) then
-                                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
-                                    IzCAutoConsumables_PrintDebug("2 - Prioritize Conjured food "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
-
-                                elseif bestConsumables[possibleMatch.Consumable].ItemName ~= possibleMatch.ItemName then
-
-                                    if bestConsumables[possibleMatch.Consumable].LevelRequired < possibleMatch.LevelRequired then
-
-                                        IzCAutoConsumables_PrintDebug("Consumable for: "..possibleMatch.Consumable.." is a higher level than current best updating it with "..possibleMatch.ItemName)
-
-                                        bestConsumables[possibleMatch.Consumable] = possibleMatch;
-                                    elseif bestConsumables[possibleMatch.Consumable].ItemStackCount > possibleMatch.ItemStackCount and bestConsumables[possibleMatch.Consumable].LevelRequired <= possibleMatch.LevelRequired then
-
-                                        IzCAutoConsumables_PrintDebug("Consumable for: "..possibleMatch.Consumable.." is a bigger stack than current best updating it with "..possibleMatch.ItemName)
-                                        bestConsumables[possibleMatch.Consumable] = possibleMatch;
-
-                                    end
-
-                                end
-                            end
-                        end
-                    end
+                elseif bestConsumables[possibleMatch.Consumable].ItemStackCount > possibleMatch.ItemStackCount and bestConsumables[possibleMatch.Consumable].LevelRequired <= possibleMatch.LevelRequired then
+                    IzCAutoConsumables_PrintDebug("Consumable for: "..possibleMatch.Consumable.." is a bigger stack than current best updating it with "..possibleMatch.ItemName)
+                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
                 end
             end
         end
     end
     return bestConsumables;
+end
+
+function IzCAutoConsumables_GetPossibleMatch(item)
+    if IzCAutoConsumables_SavedVars.EatRawFish == false and string.find(item["itemName"], L["Raw"]) ~= nil and item["itemName"] ~= L["Raw Black Truffle"] then
+        IzCAutoConsumables_PrintDebug("No raw fish: "..item["itemName"]);
+        return;
+    end
+    
+    if string.match(item["itemName"], L['Healthstone']) then
+        local possibleMatch = {};
+        possibleMatch.ItemName = item["itemName"];
+        possibleMatch.Consumable = MacroNames.Healthstone;
+        IzCAutoConsumables_PrintDebug("Healthstone")
+        return possibleMatch;
+    end
+                        
+    _,_,_,_,_,itemType,itemSubType=GetItemInfo(item["itemName"])
+    if itemType ~= L["Consumable"] or itemSubType ~= L["Consumable"] then
+        IzCAutoConsumables_PrintDebug(item["itemName"].." is not a consumable");
+        return;
+    end
+
+    local possibleMatch = IzCAutoConsumables_GetPossibleMatchFromTooltip(item)
+
+    if not possibleMatch then
+        return;
+    end
+
+    if not possibleMatch.LevelRequired then
+        possibleMatch.LevelRequired = 1
+    end
+
+    if possibleMatch.LevelRequired > UnitLevel("Player") then
+        if not possibleMatch.Consumable == MacroNames.Bandage then
+            IzCAutoConsumables_PrintDebug("Do not allow item with higher level req than player. Except Bandage "..possibleMatch.Consumable..": "..possibleMatch.LevelRequired);
+            return;
+        end
+        IzCAutoConsumables_PrintDebug("Allow item with higher level req than player because Bandage "..possibleMatch.Consumable..": "..possibleMatch.LevelRequired);
+    end
+
+    return possibleMatch;
+end
+
+function IzCAutoConsumables_GetPossibleMatchFromTooltip(item)
+    local possibleMatch = {};
+    possibleMatch.ItemStackCount = tonumber(item["stackCount"]);
+    possibleMatch.ItemName = item["itemName"];
+
+    hiddenToolTip:ClearLines()
+    hiddenToolTip:SetHyperlink(item["hyperlink"])
+
+    for i=1,hiddenToolTip:NumLines() do
+        
+        local mytext = getglobal("hiddenToolTipTextLeft" .. i)
+        local text = nil
+        
+        if mytext ~= nil then
+            text = mytext:GetText()
+        end
+        
+        if text ~= nil then
+            if string.match(text, L['Requires Level']) then
+                possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
+            elseif string.match(text, L['Requires First Aid']) then
+                possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
+            end
+            
+            if string.find(text, L["Must remain seated"]) then
+                if string.find(text, L["become well fed and gain"]) and string.find(text, L["Stamina and Spirit for"]) then
+                    possibleMatch.Consumable = MacroNames.BuffFood;
+                    IzCAutoConsumables_PrintDebug("Buff Food: "..item["itemName"])
+                    return possibleMatch;
+                elseif string.match(text, L['Use: Restores %d+ mana over']) then
+                    possibleMatch.Consumable = MacroNames.Drink;
+                    IzCAutoConsumables_PrintDebug("Drink: "..item["itemName"])
+                    return possibleMatch;
+                else
+                    possibleMatch.Consumable = MacroNames.Food;
+                    IzCAutoConsumables_PrintDebug("Food: "..item["itemName"])
+                    return possibleMatch;
+                end
+            elseif string.match(text, L['Use: Restores %d+ to %d+ health']) then
+                possibleMatch.Consumable = MacroNames.Potion;
+                IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
+                return possibleMatch;
+            elseif string.match(text, L['Use: Restores %d+ to %d+ mana']) then
+                possibleMatch.Consumable = MacroNames.ManaPotion;
+                IzCAutoConsumables_PrintDebug("Mana Potion: "..item["itemName"])
+                return possibleMatch;
+            elseif string.match(text, L['Use: Heals %d+ damage over']) then
+                possibleMatch.Consumable = MacroNames.Bandage;
+                IzCAutoConsumables_PrintDebug("Bandage: "..item["itemName"])
+                return possibleMatch;
+            end
+        end
+    end
 end
 
 function IzCAutoConsumables_PrintDebug(message)
@@ -293,7 +297,7 @@ end
 
 local function OnSettingChanged(setting, value)
     -- This callback will be invoked whenever a setting is modified.
-    print("Setting changed:", setting:GetVariable(), value)
+    IzCAutoConsumables_PrintDebug("Setting changed:", setting:GetVariable(), value)
 end
 
 local category = Settings.RegisterVerticalLayoutCategory("IzC Auto Consumables")

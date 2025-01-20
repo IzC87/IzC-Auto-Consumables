@@ -104,26 +104,32 @@ function IzCAutoConsumables_GetBestConsumables()
                                     if string.match(text, L['Requires First Aid']) then
                                         possibleMatch.LevelRequired = tonumber(string.match(text, '%d+'));
                                     end
-
+                                    
                                     if string.find(text, L["Must remain seated"]) then
                                         if string.find(text, L["become well fed and gain"]) and string.find(text, L["Stamina and Spirit for"]) then
                                             possibleMatch.Consumable = MacroNames.BuffFood;
+                                            i = hiddenToolTip:NumLines();
                                             IzCAutoConsumables_PrintDebug("Buff Food: "..item["itemName"])
                                         elseif string.match(text, L['Use: Restores %d+ mana over']) then
                                             possibleMatch.Consumable = MacroNames.Drink;
+                                            i = hiddenToolTip:NumLines();
                                             IzCAutoConsumables_PrintDebug("Drink: "..item["itemName"])
                                         else
                                             possibleMatch.Consumable = MacroNames.Food;
+                                            i = hiddenToolTip:NumLines();
                                             IzCAutoConsumables_PrintDebug("Food: "..item["itemName"])
                                         end
                                     elseif string.match(text, L['Use: Restores %d+ to %d+ health']) then
                                         possibleMatch.Consumable = MacroNames.Potion;
+                                        i = hiddenToolTip:NumLines();
                                         IzCAutoConsumables_PrintDebug("Potion: "..item["itemName"])
                                     elseif string.match(text, L['Use: Restores %d+ to %d+ mana']) then
                                         possibleMatch.Consumable = MacroNames.ManaPotion;
+                                        i = hiddenToolTip:NumLines();
                                         IzCAutoConsumables_PrintDebug("Mana Potion: "..item["itemName"])
                                     elseif string.match(text, L['Use: Heals %d+ damage over']) then
                                         possibleMatch.Consumable = MacroNames.Bandage;
+                                        i = hiddenToolTip:NumLines();
                                         IzCAutoConsumables_PrintDebug("Bandage: "..item["itemName"])
                                     end
                                 end

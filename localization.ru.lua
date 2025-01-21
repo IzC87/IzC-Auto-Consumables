@@ -1,3 +1,5 @@
+-- Thank you ZamestoTV
+
 local _, L = ...;
 if GetLocale() == "ruRU" then
     L["Healthstone"] = "Камень здоровья";

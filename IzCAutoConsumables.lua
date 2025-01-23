@@ -1,5 +1,5 @@
 -- Globals Section
-local _, L = ...;
+local addonName, L = ...;
 local MacroNames = {
     Bandage = "IzCBandage",
     Food = "IzCFood",
@@ -11,7 +11,7 @@ local MacroNames = {
 }
 
 local IzCAutoConsumables_TargetTrigger = GetTime();
-local IzCAutoConsumables_TriggerWaitTime = 2;
+local IzCAutoConsumables_TriggerWaitTime = 1;
 
 local IzCAutoConsumables_ItemPlaceHolder = "PLACEHOLDER"
 local IzCAutoConsumables_BaseMacro = "#showtooltip []" .. IzCAutoConsumables_ItemPlaceHolder .. ";\n"..
@@ -27,9 +27,24 @@ workerFrame:SetScript("OnEvent", function(self, event, ...) IzCAutoConsumables_E
 
 -- register events
 workerFrame:RegisterEvent("BAG_UPDATE");
-workerFrame:RegisterEvent("PLAYER_ENTERING_WORLD");
+workerFrame:RegisterEvent("ADDON_LOADED");
 
+IzCAutoConsumables_SavedVars = {}
+local init = true;
 function IzCAutoConsumables_UpdateMacros()
+    if init then
+        init = false;
+        for k,v in pairs(MacroNames) do
+            if (IzCAutoConsumables_SavedVars[v] ~= true) then
+                local macroExists = GetMacroBody(v);
+                if not macroExists then
+                    IzCAutoConsumables_PrintDebug("No macro for "..v.." creating it");
+                    CreateMacro(v, "INV_MISC_QUESTIONMARK", " ", nil)
+                end
+            end
+        end
+    end
+
 
     -- Get a list of the best usable consumables
     local bestConsumable = IzCAutoConsumables_GetBestConsumables();
@@ -195,23 +210,16 @@ function IzCAutoConsumables_PrintDebug(message)
     end
 end
 
-
 -----------------------
 ---- Event Handler ----
 -----------------------
-function IzCAutoConsumables_EventHandler(event, ...)
-    
-    -- Create Macros
-    if (event == "PLAYER_ENTERING_WORLD") then
-        for k,v in pairs(MacroNames) do
-            if (not IzCAutoConsumables_SavedVars[k]) then
-                local macroExists = GetMacroBody(v);
-                if not macroExists then
-                    IzCAutoConsumables_PrintDebug("No macro for "..v.." creating it");
-                    CreateMacro(v, "INV_MISC_QUESTIONMARK", "", false)
-                end
-            end
-        end
+function IzCAutoConsumables_EventHandler(event, arg1, ...)
+
+    if (event == "ADDON_LOADED") then
+        IzCAutoConsumables_TargetTrigger = GetTime() + IzCAutoConsumables_TriggerWaitTime + 4;
+        IzCAutoConsumables_RegisterOnUpdate()
+        workerFrame:UnregisterEvent("ADDON_LOADED");
+        return;
     end
 
     IzCAutoConsumables_PrintDebug(event)
@@ -273,6 +281,7 @@ function IzCAutoConsumables_OnUpdate()
     if (IzCAutoConsumables_TargetTrigger > GetTime()) or UnitAffectingCombat("player") then
         return;
     end
+
     IzCAutoConsumables_PrintDebug("OnUpdate runner")
     IzCAutoConsumables_UnRegisterOnUpdate();
     
@@ -295,11 +304,6 @@ end
 --      Options     --
 ----------------------
 
-local function OnSettingChanged(setting, value)
-    -- This callback will be invoked whenever a setting is modified.
-    IzCAutoConsumables_PrintDebug("Setting changed:", setting:GetVariable(), value)
-end
-
 local category = Settings.RegisterVerticalLayoutCategory("IzC Auto Consumables")
 
 local function CreateCheckBox(variable, name, tooltip, category, defaultValue)
@@ -308,11 +312,11 @@ local function CreateCheckBox(variable, name, tooltip, category, defaultValue)
     end
 
     local function SetValue(value)
+        IzCAutoConsumables_PrintDebug("Setting "..variable.." changed to: "..tostring(value))
         IzCAutoConsumables_SavedVars[variable] = value
     end
 
     local setting = Settings.RegisterProxySetting(category, variable, type(false), name, defaultValue, GetValue, SetValue)
-    setting:SetValueChangedCallback(OnSettingChanged)
 
     Settings.CreateCheckbox(category, setting, tooltip)
 end

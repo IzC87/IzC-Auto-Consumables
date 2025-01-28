@@ -216,10 +216,15 @@ end
 function IzCAutoConsumables_EventHandler(event, arg1, ...)
 
     if (event == "ADDON_LOADED") then
-        IzCAutoConsumables_TargetTrigger = GetTime() + IzCAutoConsumables_TriggerWaitTime + 4;
-        IzCAutoConsumables_RegisterOnUpdate()
-        workerFrame:UnregisterEvent("ADDON_LOADED");
-        return;
+        if (arg1 == addonName) then
+
+            IzCAutoConsumables_SavedVars = setmetatable(IzCAutoConsumables_SavedVars or {}, { __index = IzCAutoConsumables_Defaults })
+
+            IzCAutoConsumables_TargetTrigger = GetTime() + IzCAutoConsumables_TriggerWaitTime + 4;
+            IzCAutoConsumables_RegisterOnUpdate()
+            workerFrame:UnregisterEvent("ADDON_LOADED");
+            return;
+        end
     end
 
     IzCAutoConsumables_PrintDebug(event)
@@ -337,3 +342,16 @@ do
 end
 
 Settings.RegisterAddOnCategory(category)
+
+IzCAutoConsumables_Defaults = {
+    [MacroNames.Healthstone] = false,
+    [MacroNames.Food] = false,
+    [MacroNames.Bandage] = false,
+    [MacroNames.Drink] = false,
+    [MacroNames.BuffFood] = false,
+    [MacroNames.Potion] = false,
+    [MacroNames.ManaPotion] = false,
+    ["PrioConjured"] = true,
+    ["EatRawFish"] = false,
+    ["Debug"] = false
+}

@@ -89,9 +89,15 @@ function IzCAutoConsumables_GetBestConsumables()
                 elseif not bestConsumables[possibleMatch.Consumable] then
                     IzCAutoConsumables_PrintDebug("First find for Consumable: "..possibleMatch.Consumable)
                     bestConsumables[possibleMatch.Consumable] = possibleMatch;
-
-                elseif IzCAutoConsumables_SavedVars.PrioConjured and string.match(possibleMatch.ItemName, L['Conjured']) then
+                elseif IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and string.match(possibleMatch.ItemName, L['Conjured']) then
                     IzCAutoConsumables_PrintDebug("Prioritize Conjured food "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
+                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
+                elseif IzCAutoConsumables_SavedVars.IzC_IAC_PrioFestivalDumplings and string.match(possibleMatch.ItemName, L['Festival Dumplings']) then
+                    IzCAutoConsumables_PrintDebug("Prioritize Festival Dumplings "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
+                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
+
+                elseif IzCAutoConsumables_SavedVars.IzC_IAC_PrioMannaBiscuit and string.match(possibleMatch.ItemName, L['Enriched Manna Biscuits']) then
+                    IzCAutoConsumables_PrintDebug("Prioritize Enriched Manna Biscuit "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
                     bestConsumables[possibleMatch.Consumable] = possibleMatch;
 
                 elseif bestConsumables[possibleMatch.Consumable].LevelRequired < possibleMatch.LevelRequired then
@@ -109,7 +115,7 @@ function IzCAutoConsumables_GetBestConsumables()
 end
 
 function IzCAutoConsumables_GetPossibleMatch(item)
-    if IzCAutoConsumables_SavedVars.EatRawFish == false and string.find(item["itemName"], L["Raw"]) ~= nil and item["itemName"] ~= L["Raw Black Truffle"] then
+    if IzCAutoConsumables_SavedVars.IzC_IAC_EatRawFish == false and string.find(item["itemName"], L["Raw"]) ~= nil and item["itemName"] ~= L["Raw Black Truffle"] then
         IzCAutoConsumables_PrintDebug("No raw fish: "..item["itemName"]);
         return;
     end
@@ -205,7 +211,7 @@ function IzCAutoConsumables_GetPossibleMatchFromTooltip(item)
 end
 
 function IzCAutoConsumables_PrintDebug(message)
-    if IzCAutoConsumables_SavedVars.Debug == true then
+    if IzCAutoConsumables_SavedVars.IzC_IAC_Debug == true then
         DEFAULT_CHAT_FRAME:AddMessage(message);
     end
 end
@@ -327,31 +333,37 @@ local function CreateCheckBox(variable, name, tooltip, category, defaultValue)
 end
 
 do
-    CreateCheckBox("PrioConjured", "Prioritize Conjured Food", "Prioritize using Conjured consumables regardless of their level.", category, false)
-    CreateCheckBox("EatRawFish", "Eat raw fish", "Whether or not we should allow eating of raw fish.", category, false)
-    
-    CreateCheckBox(MacroNames.Healthstone, "Disable Healthstone Macro", "Whether or not we should create a macro for Healthstone.", category, false)
-    CreateCheckBox(MacroNames.Bandage, "Disable Bandage Macro", "Whether or not we should create a macro for Bandages.", category, false)
-    CreateCheckBox(MacroNames.Food, "Disable Food Macro", "Whether or not we should create a macro for Food.", category, false)
-    CreateCheckBox(MacroNames.Drink, "Disable Drink Macro", "Whether or not we should create a macro for Drink.", category, false)
-    CreateCheckBox(MacroNames.BuffFood, "Disable BuffFood Macro", "Whether or not we should create a macro for BuffFood.", category, false)
-    CreateCheckBox(MacroNames.Potion, "Disable Potion Macro", "Whether or not we should create a macro for Potion.", category, false)
-    CreateCheckBox(MacroNames.ManaPotion, "Disable Mana Potion Macro", "Whether or not we should create a macro for Mana Potion.", category, false)
+    CreateCheckBox("IzC_IAC_PrioConjured", "Prioritize Conjured Food", "Prioritize using Conjured consumables regardless of their level.", category, false)
 
-    CreateCheckBox("Debug", "Debug Mode", "Print debug statements?", category, false)
+    CreateCheckBox("IzC_IAC_PrioFestivalDumplings", "Prioritize Festival Dumplings", "Prioritize using Festival Dumplings.", category, false)
+    CreateCheckBox("IzC_IAC_PrioMannaBiscuit", "Prioritize Enriched Manna Biscuit", "Prioritize using Enriched Manna Biscuit.", category, false)
+
+    CreateCheckBox("IzC_IAC_EatRawFish", "Eat raw fish", "Whether or not we should allow eating of raw fish.", category, false)
+    
+    CreateCheckBox("IzC_IAC_"..MacroNames.Healthstone, "Disable Healthstone Macro", "Whether or not we should create a macro for Healthstone.", category, false)
+    CreateCheckBox("IzC_IAC_"..MacroNames.Bandage, "Disable Bandage Macro", "Whether or not we should create a macro for Bandages.", category, false)
+    CreateCheckBox("IzC_IAC_"..MacroNames.Food, "Disable Food Macro", "Whether or not we should create a macro for Food.", category, false)
+    CreateCheckBox("IzC_IAC_"..MacroNames.Drink, "Disable Drink Macro", "Whether or not we should create a macro for Drink.", category, false)
+    CreateCheckBox("IzC_IAC_"..MacroNames.BuffFood, "Disable BuffFood Macro", "Whether or not we should create a macro for BuffFood.", category, false)
+    CreateCheckBox("IzC_IAC_"..MacroNames.Potion, "Disable Potion Macro", "Whether or not we should create a macro for Potion.", category, false)
+    CreateCheckBox("IzC_IAC_"..MacroNames.ManaPotion, "Disable Mana Potion Macro", "Whether or not we should create a macro for Mana Potion.", category, false)
+
+    CreateCheckBox("IzC_IAC_Debug", "Debug Mode", "Print debug statements?", category, false)
 end
 
 Settings.RegisterAddOnCategory(category)
 
 IzCAutoConsumables_Defaults = {
-    [MacroNames.Healthstone] = false,
-    [MacroNames.Food] = false,
-    [MacroNames.Bandage] = false,
-    [MacroNames.Drink] = false,
-    [MacroNames.BuffFood] = false,
-    [MacroNames.Potion] = false,
-    [MacroNames.ManaPotion] = false,
-    ["PrioConjured"] = true,
-    ["EatRawFish"] = false,
-    ["Debug"] = false
+    ["IzC_IAC_"..MacroNames.Healthstone] = false,
+    ["IzC_IAC_"..MacroNames.Food] = false,
+    ["IzC_IAC_"..MacroNames.Bandage] = false,
+    ["IzC_IAC_"..MacroNames.Drink] = false,
+    ["IzC_IAC_"..MacroNames.BuffFood] = false,
+    ["IzC_IAC_"..MacroNames.Potion] = false,
+    ["IzC_IAC_"..MacroNames.ManaPotion] = false,
+    ["IzC_IAC_PrioConjured"] = true,
+    ["IzC_IAC_PrioFestivalDumplings"] = false,
+    ["IzC_IAC_PrioMannaBiscuit"] = false,
+    ["IzC_IAC_EatRawFish"] = false,
+    ["IzC_IAC_Debug"] = false
 }

@@ -16,4 +16,6 @@ if GetLocale() == "ruRU" then
     L["Raw Black Truffle"] = "Свежий черный трюфель";
     L["Raw"] = "Сырой";
     L["Requires First Aid"] = "Требуется первая помощь";
+    L["Festival Dumplings"] = "Праздничные клецки";
+    L["Enriched Manna Biscuit"] = "Витаминизированное печенье из манны";
 end

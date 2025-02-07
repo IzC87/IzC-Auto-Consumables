@@ -14,4 +14,6 @@ if GetLocale() == "deDE" then
     L["Raw Black Truffle"] = "Roher schwarzer Trüffel";
     L["Raw"] = "Roher";
     L["Requires First Aid"] = "Benötigt Erste Hilfe";
+    L["Festival Dumplings"] = "Festtagsklöße";
+    L["Enriched Manna Biscuit"] = "Angereicherter Manakeks";
 end

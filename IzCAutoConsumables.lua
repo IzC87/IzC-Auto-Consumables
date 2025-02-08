@@ -87,18 +87,36 @@ function IzCAutoConsumables_GetBestConsumables()
                 if (possibleMatch == nil) then
                     
                 elseif not bestConsumables[possibleMatch.Consumable] then
-                    IzCAutoConsumables_PrintDebug("First find for Consumable: "..possibleMatch.Consumable)
+                    IzCAutoConsumables_PrintDebug("First find for Consumable: "..possibleMatch.Consumable.." - "..possibleMatch.ItemName)
                     bestConsumables[possibleMatch.Consumable] = possibleMatch;
+                    if (string.match(possibleMatch.ItemName, L['Festival Dumplings']) or string.match(possibleMatch.ItemName, L['Enriched Manna Biscuit'])) then
+                        possibleMatch.Consumable = MacroNames.Drink;
+                        bestConsumables[MacroNames.Drink] = possibleMatch;
+                    end
+
                 elseif IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and string.match(possibleMatch.ItemName, L['Conjured']) then
                     IzCAutoConsumables_PrintDebug("Prioritize Conjured food "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
                     bestConsumables[possibleMatch.Consumable] = possibleMatch;
-                elseif IzCAutoConsumables_SavedVars.IzC_IAC_PrioFestivalDumplings and string.match(possibleMatch.ItemName, L['Festival Dumplings']) then
-                    IzCAutoConsumables_PrintDebug("Prioritize Festival Dumplings "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
-                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
 
-                elseif IzCAutoConsumables_SavedVars.IzC_IAC_PrioMannaBiscuit and string.match(possibleMatch.ItemName, L['Enriched Manna Biscuits']) then
-                    IzCAutoConsumables_PrintDebug("Prioritize Enriched Manna Biscuit "..possibleMatch.ItemName.." For Consumable: "..possibleMatch.Consumable)
-                    bestConsumables[possibleMatch.Consumable] = possibleMatch;
+                elseif (IzCAutoConsumables_SavedVars.IzC_IAC_PrioFestivalDumplings and string.match(possibleMatch.ItemName, L['Festival Dumplings']))
+                        and (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Food] and not string.match(bestConsumables[MacroNames.Food].ItemName, L['Conjured']))) then
+                    IzCAutoConsumables_PrintDebug("Prioritize Festival Dumplings")
+                    bestConsumables[MacroNames.Food] = possibleMatch;
+                    possibleMatch.Consumable = MacroNames.Drink;
+                    bestConsumables[MacroNames.Drink] = possibleMatch;
+
+                elseif IzCAutoConsumables_SavedVars.IzC_IAC_PrioMannaBiscuit and string.match(possibleMatch.ItemName, L['Enriched Manna Biscuit'])
+                        and (IzCAutoConsumables_SavedVars.IzC_IAC_PrioFestivalDumplings == false or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioFestivalDumplings and bestConsumables[MacroNames.Food] and not string.match(bestConsumables[MacroNames.Food].ItemName, L['Festival Dumplings'])))
+                        and (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Food] and not string.match(bestConsumables[MacroNames.Food].ItemName, L['Conjured']))) then
+
+                    IzCAutoConsumables_PrintDebug("Prioritize Enriched Manna Biscuit")
+                    bestConsumables[MacroNames.Food] = possibleMatch;
+                    possibleMatch.Consumable = MacroNames.Drink;
+                    bestConsumables[MacroNames.Drink] = possibleMatch;
+                
+                elseif (IzCAutoConsumables_SavedVars.IzC_IAC_PrioMannaBiscuit and bestConsumables[MacroNames.Food] and string.match(bestConsumables[MacroNames.Food].ItemName, L['Enriched Manna Biscuit']))
+                    or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioFestivalDumplings and bestConsumables[MacroNames.Food] and string.match(bestConsumables[MacroNames.Food].ItemName, L['Festival Dumplings']))
+                    or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Food] and string.match(bestConsumables[MacroNames.Food].ItemName, L['Conjured'])) then
 
                 elseif bestConsumables[possibleMatch.Consumable].LevelRequired < possibleMatch.LevelRequired then
                     IzCAutoConsumables_PrintDebug("Higher level food: "..possibleMatch.ItemName.." is better than: "..bestConsumables[possibleMatch.Consumable].ItemName);
@@ -119,7 +137,25 @@ function IzCAutoConsumables_GetPossibleMatch(item)
         IzCAutoConsumables_PrintDebug("No raw fish: "..item["itemName"]);
         return;
     end
-    
+
+    if string.match(item["itemName"], L['Festival Dumplings']) then
+        local possibleMatch = {};
+        possibleMatch.ItemName = item["itemName"];
+        possibleMatch.Consumable = MacroNames.Food;
+        possibleMatch.LevelRequired = 60;
+        possibleMatch.ItemStackCount = 1;
+        IzCAutoConsumables_PrintDebug("Festival Dumplings")
+        return possibleMatch;
+    end
+    if string.match(item["itemName"], L['Enriched Manna Biscuit']) then
+        local possibleMatch = {};
+        possibleMatch.ItemName = item["itemName"];
+        possibleMatch.Consumable = MacroNames.Food;
+        possibleMatch.LevelRequired = 60;
+        possibleMatch.ItemStackCount = 1;
+        IzCAutoConsumables_PrintDebug("Enriched Manna Biscuits")
+        return possibleMatch;
+    end
     if string.match(item["itemName"], L['Healthstone']) then
         local possibleMatch = {};
         possibleMatch.ItemName = item["itemName"];
@@ -127,7 +163,7 @@ function IzCAutoConsumables_GetPossibleMatch(item)
         IzCAutoConsumables_PrintDebug("Healthstone")
         return possibleMatch;
     end
-                        
+    
     _,_,_,_,_,itemType,itemSubType=GetItemInfo(item["itemName"])
     if itemType ~= L["Consumable"] or itemSubType ~= L["Consumable"] then
         IzCAutoConsumables_PrintDebug(item["itemName"].." is not a consumable");
@@ -323,8 +359,9 @@ local function CreateCheckBox(variable, name, tooltip, category, defaultValue)
     end
 
     local function SetValue(value)
-        IzCAutoConsumables_PrintDebug("Setting "..variable.." changed to: "..tostring(value))
-        IzCAutoConsumables_SavedVars[variable] = value
+        IzCAutoConsumables_PrintDebug("Setting "..variable.." changed to: "..tostring(value));
+        IzCAutoConsumables_SavedVars[variable] = value;
+        IzCAutoConsumables_UpdateMacros();
     end
 
     local setting = Settings.RegisterProxySetting(category, variable, type(false), name, defaultValue, GetValue, SetValue)

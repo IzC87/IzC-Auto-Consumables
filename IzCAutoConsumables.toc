@@ -3,7 +3,7 @@
 ## Title: IzCAutoConsumables
 ## Author: IzC
 ## Version: @project-version@
-## SavedVariables: IzCAutoConsumables_SavedVars
+## SavedVariables: IzCAutoConsumables_SavedVars, IzC_Cache, IzC_Blacklist
 
 ## X-Curse-Project-ID: 1180339
 

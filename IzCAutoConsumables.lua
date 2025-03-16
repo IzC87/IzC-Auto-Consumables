@@ -69,7 +69,7 @@ function IzC_AC:UpdateMacro(macroName, itemName)
         EditMacro(macroName, nil, nil, IzC_AC:GetMacroBody(itemName), true, nil);
     end
 
-    IzC_AC:PrintDebug(IzC_AC:GetMacroBody(itemName));
+    -- IzC_AC:PrintDebug(IzC_AC:GetMacroBody(itemName));
 end
 
 function IzC_AC:GetMacroBody(itemName)
@@ -85,7 +85,7 @@ function IzC_AC:GetItemFromCache(item)
     -- Item is not even a consumable
     _,_,_,_,_,itemType,itemSubType=GetItemInfo(item["itemName"])
     if itemType ~= L["Consumable"] or itemSubType ~= L["Consumable"] then
-        -- IzC_AC:PrintDebug(item["itemName"].." is not a consumable");
+        IzC_AC:PrintDebug(item["itemName"].." is not a consumable");
         return;
     end
 
@@ -96,8 +96,20 @@ function IzC_AC:GetItemFromCache(item)
         return itemCache;
     end
 
-    -- Get item info from tooltip
-    local matchedItem = IzC_AC:GetPossibleMatchFromTooltip(item)
+    local matchedItem = nil;
+    -- Fake it if it's a Healthstone
+    if (string.find(item.itemName, L["Healthstone"])) then
+        matchedItem = {
+            ItemName = item.itemName,
+            LevelRequired = 1,
+            Amount = 1,
+            Consumable = MacroNames.Healthstone,
+            ItemStackCount = 1;
+        }
+    else
+        -- Get item info from tooltip
+        matchedItem = IzC_AC:GetPossibleMatchFromTooltip(item)
+    end
 
     -- No tooltip match found
     if not matchedItem then
@@ -179,54 +191,78 @@ function IzC_AC:CheckForBestFit(cachedItem, bestConsumables)
     end
 
     -- Prioritize Conjured Items
-    if IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and string.match(cachedItem.ItemName, L['Conjured']) then
-        IzC_AC:PrintDebug("Prioritize Conjured food "..cachedItem.ItemName.." For Consumable: "..cachedItem.Consumable)
-        bestConsumables[cachedItem.Consumable] = cachedItem;
-        return;
+    if IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured then
+        if string.match(cachedItem.ItemName, L['Conjured']) then
+            IzC_AC:PrintDebug("Prioritize Conjured food "..cachedItem.ItemName.." For Consumable: "..cachedItem.Consumable)
+            bestConsumables[cachedItem.Consumable] = cachedItem;
+            return;
+        end
+
+    -- Keep conjured if already selected before
+        if bestConsumables[cachedItem.Consumable] and string.match(bestConsumables[cachedItem.Consumable].ItemName, L['Conjured']) then
+            IzC_AC:PrintDebug("Prioritize already selected Conjured food "..bestConsumables[cachedItem.Consumable].ItemName.." over "..cachedItem.ItemName.." For Consumable: "..cachedItem.Consumable)
+            return;
+        end
     end
 
     -- Prioritize Festival Dumplings
-    if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioFestivalDumplings and string.match(cachedItem.ItemName, L['Festival Dumplings'])) then
-        IzC_AC:PrintDebug("Prioritize Festival Dumplings")
+    if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioFestivalDumplings) then
+        if (string.match(cachedItem.ItemName, L['Festival Dumplings'])) then
+            IzC_AC:PrintDebug("Prioritize Festival Dumplings")
 
-        local exitEarly = false;
+            local exitEarly = false;
 
-        if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Food] and not string.match(bestConsumables[MacroNames.Food].ItemName, L['Conjured']))) then
-            IzC_AC:PrintDebug("Prioritize Festival Dumplings for Food")
-            bestConsumables[MacroNames.Food] = cachedItem;
-            exitEarly = true;
+            if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or not bestConsumables[MacroNames.Food] or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Food] and not string.match(bestConsumables[MacroNames.Food].ItemName, L['Conjured']))) then
+                IzC_AC:PrintDebug("Prioritize Festival Dumplings for Food")
+                bestConsumables[MacroNames.Food] = cachedItem;
+                exitEarly = true;
+            end
+
+            if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or not bestConsumables[MacroNames.Drink] or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Drink] and not string.match(bestConsumables[MacroNames.Drink].ItemName, L['Conjured']))) then
+                IzC_AC:PrintDebug("Prioritize Festival Dumplings for Food")
+                bestConsumables[MacroNames.Drink] = cachedItem;
+                exitEarly = true;
+            end
+
+            if (exitEarly == true) then
+                return;
+            end
         end
 
-        if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Drink] and not string.match(bestConsumables[MacroNames.Drink].ItemName, L['Conjured']))) then
-            IzC_AC:PrintDebug("Prioritize Festival Dumplings for Food")
-            bestConsumables[MacroNames.Drink] = cachedItem;
-            exitEarly = true;
-        end
-
-        if (exitEarly == true) then
+        -- Keep Festival Dumplings if already selected before
+        if bestConsumables[cachedItem.Consumable] and string.match(bestConsumables[cachedItem.Consumable].ItemName, L['Festival Dumplings']) then
+            IzC_AC:PrintDebug("Prioritize already selected Festival Dumplings food "..bestConsumables[cachedItem.Consumable].ItemName.." over "..cachedItem.ItemName.." For Consumable: "..cachedItem.Consumable)
             return;
         end
     end
 
     -- Prioritize Enriched Manna Biscuit
-    if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioMannaBiscuit and string.match(cachedItem.ItemName, L['Enriched Manna Biscuit'])) then
-        IzC_AC:PrintDebug("Prioritize Enriched Manna Biscuit")
+    if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioMannaBiscuit) then
+        if (string.match(cachedItem.ItemName, L['Enriched Manna Biscuit'])) then
+            IzC_AC:PrintDebug("Prioritize Enriched Manna Biscuit")
 
-        local exitEarly = false;
+            local exitEarly = false;
 
-        if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Food] and not string.match(bestConsumables[MacroNames.Food].ItemName, L['Conjured']))) then
-            IzC_AC:PrintDebug("Prioritize Enriched Manna Biscuit for Food")
-            bestConsumables[MacroNames.Food] = cachedItem;
-            exitEarly = true;
+            if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or not bestConsumables[MacroNames.Food] or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Food] and not string.match(bestConsumables[MacroNames.Food].ItemName, L['Conjured']))) then
+                IzC_AC:PrintDebug("Prioritize Enriched Manna Biscuit for Food")
+                bestConsumables[MacroNames.Food] = cachedItem;
+                exitEarly = true;
+            end
+
+            if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or not bestConsumables[MacroNames.Drink] or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Drink] and not string.match(bestConsumables[MacroNames.Drink].ItemName, L['Conjured']))) then
+                IzC_AC:PrintDebug("Prioritize Enriched Manna Biscuit for Food")
+                bestConsumables[MacroNames.Drink] = cachedItem;
+                exitEarly = true;
+            end
+
+            if (exitEarly == true) then
+                return;
+            end
         end
 
-        if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Drink] and not string.match(bestConsumables[MacroNames.Drink].ItemName, L['Conjured']))) then
-            IzC_AC:PrintDebug("Prioritize Enriched Manna Biscuit for Food")
-            bestConsumables[MacroNames.Drink] = cachedItem;
-            exitEarly = true;
-        end
-
-        if (exitEarly == true) then
+        -- Keep Enriched Manna Biscuit if already selected before
+        if bestConsumables[cachedItem.Consumable] and string.match(bestConsumables[cachedItem.Consumable].ItemName, L['Enriched Manna Biscuit']) then
+            IzC_AC:PrintDebug("Prioritize already selected Enriched Manna Biscuit food "..bestConsumables[cachedItem.Consumable].ItemName.." over "..cachedItem.ItemName.." For Consumable: "..cachedItem.Consumable)
             return;
         end
     end
@@ -468,6 +504,7 @@ function IzC_AC:CreateSettings()
 
     local function CreateBlacklistListing(itemName)
         local function OnButtonClick()
+            self:Hide();
             DEFAULT_CHAT_FRAME:AddMessage(itemName.." removed from blacklist.");
             IzC_Blacklist[itemName] = nil
         end

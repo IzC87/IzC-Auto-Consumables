@@ -316,7 +316,7 @@ function IzC_AC:GetPossibleMatchFromTooltip(item)
             
             if string.find(text, L["Must remain seated"]) then
                 possibleMatch.Amount = tonumber(string.match(text, '%d+'));
-                if string.find(text, L["become well fed and gain"]) and string.find(text, L["Stamina and Spirit for"]) then
+                if (string.find(text, L["become well fed and gain"]) and string.find(text, L["Stamina and Spirit for"])) or string.find(text, L["increases your Stamina by"]) then
                     possibleMatch.Consumable = MacroNames.BuffFood;
                     IzC_AC:PrintDebug("Buff Food: "..item["itemName"])
                     return possibleMatch;
@@ -504,7 +504,6 @@ function IzC_AC:CreateSettings()
 
     local function CreateBlacklistListing(itemName)
         local function OnButtonClick()
-            self:Hide();
             DEFAULT_CHAT_FRAME:AddMessage(itemName.." removed from blacklist.");
             IzC_Blacklist[itemName] = nil
         end

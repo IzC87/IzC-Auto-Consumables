@@ -17,4 +17,5 @@ if GetLocale() == "deDE" then
     L["First Aid"] = "Erste Hilfe";
     L["Festival Dumplings"] = "Festtagsklöße";
     L["Enriched Manna Biscuit"] = "Angereicherter Manakeks";
+    L["increases your Stamina by"] = "erdem Eure Ausdauer";
 end

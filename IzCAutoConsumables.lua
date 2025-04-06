@@ -86,7 +86,6 @@ function IzC_AC:GetItemFromCache(item)
     -- Item is not even a consumable
     _,_,_,_,_,itemType,itemSubType=GetItemInfo(item["itemName"])
     if (itemType ~= L["Consumable"] or itemSubType ~= L["Consumable"]) and (itemType ~= L["Trade Goods"] or itemSubType ~= L["Explosives"]) then
-        print(itemType, itemSubType);
         IzC_AC:PrintDebug(item["itemName"].." is not a consumable");
         return;
     end

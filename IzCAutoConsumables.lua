@@ -7,7 +7,8 @@ local MacroNames = {
     BuffFood = "IzCBuffFood",
     Potion = "IzCPotion",
     ManaPotion = "IzCManaPotion",
-    Healthstone = "IzCHealthstone"
+    Healthstone = "IzCHealthstone",
+    Grenade = "IzCGrenade"
 }
 
 local IzCAutoConsumables_TargetTrigger = GetTime();
@@ -84,7 +85,8 @@ function IzC_AC:GetItemFromCache(item)
 
     -- Item is not even a consumable
     _,_,_,_,_,itemType,itemSubType=GetItemInfo(item["itemName"])
-    if itemType ~= L["Consumable"] or itemSubType ~= L["Consumable"] then
+    if (itemType ~= L["Consumable"] or itemSubType ~= L["Consumable"]) and (itemType ~= L["Trade Goods"] or itemSubType ~= L["Explosives"]) then
+        print(itemType, itemSubType);
         IzC_AC:PrintDebug(item["itemName"].." is not a consumable");
         return;
     end
@@ -344,6 +346,11 @@ function IzC_AC:GetPossibleMatchFromTooltip(item)
                 possibleMatch.Consumable = MacroNames.Bandage;
                 IzC_AC:PrintDebug("Bandage: "..item["itemName"])
                 return possibleMatch;
+            elseif string.match(text, L['Inflicts %d+ to %d+ Fire damage']) then
+                possibleMatch.Amount = tonumber(string.match(text, '%d+'));
+                possibleMatch.Consumable = MacroNames.Grenade;
+                IzC_AC:PrintDebug("Grenade: "..item["itemName"])
+                return possibleMatch;
             end
         end
     end
@@ -364,6 +371,9 @@ function IzC_AC:EventHandler(event, arg1, ...)
         if (arg1 == addonName) then
 
             IzCAutoConsumables_SavedVars = setmetatable(IzCAutoConsumables_SavedVars or {}, { __index = IzCAutoConsumables_Defaults })
+
+            IzC_AC:CheckSettings();
+
             IzC_Cache = setmetatable(IzC_Cache or {}, { __index = {} })
             IzC_Blacklist = setmetatable(IzC_Blacklist or {}, { __index = {} })
             
@@ -392,6 +402,12 @@ function IzC_AC:EventHandler(event, arg1, ...)
 
     IzCAutoConsumables_TargetTrigger = GetTime() + IzCAutoConsumables_TriggerWaitTime;
     IzC_AC:RegisterOnUpdate()
+end
+
+function IzC_AC:CheckSettings()
+    if (IzCAutoConsumables_SavedVars[MacroNames.Grenade] == nil) then
+        IzCAutoConsumables_SavedVars[MacroNames.Grenade] = IzCAutoConsumables_Defaults[MacroNames.Grenade]
+    end
 end
 
 function IzC_AC:TryRegisterEvent(event)
@@ -532,13 +548,14 @@ function IzC_AC:CreateSettings()
         CreateCheckBox("IzC_IAC_PrioMannaBiscuit", "Prioritize Enriched Manna Biscuit", "Prioritize using Enriched Manna Biscuit.", MainCategory, false)
         CreateCheckBox("IzC_IAC_EatRawFish", "Eat raw fish", "Whether or not we should allow eating of raw fish.", MainCategory, false)
 
-        CreateCheckBox("IzC_IAC_"..MacroNames.Healthstone, "Disable Healthstone Macro", "Whether or not we should create a macro for Healthstone.", MacrosCategory, false)
-        CreateCheckBox("IzC_IAC_"..MacroNames.Bandage, "Disable Bandage Macro", "Whether or not we should create a macro for Bandages.", MacrosCategory, false)
-        CreateCheckBox("IzC_IAC_"..MacroNames.Food, "Disable Food Macro", "Whether or not we should create a macro for Food.", MacrosCategory, false)
-        CreateCheckBox("IzC_IAC_"..MacroNames.Drink, "Disable Drink Macro", "Whether or not we should create a macro for Drink.", MacrosCategory, false)
-        CreateCheckBox("IzC_IAC_"..MacroNames.BuffFood, "Disable BuffFood Macro", "Whether or not we should create a macro for BuffFood.", MacrosCategory, false)
-        CreateCheckBox("IzC_IAC_"..MacroNames.Potion, "Disable Potion Macro", "Whether or not we should create a macro for Potion.", MacrosCategory, false)
-        CreateCheckBox("IzC_IAC_"..MacroNames.ManaPotion, "Disable Mana Potion Macro", "Whether or not we should create a macro for Mana Potion.", MacrosCategory, false)
+        CreateCheckBox(MacroNames.Healthstone, "Disable Healthstone Macro", "Whether or not we should create a macro for Healthstone.", MacrosCategory, false)
+        CreateCheckBox(MacroNames.Bandage, "Disable Bandage Macro", "Whether or not we should create a macro for Bandages.", MacrosCategory, false)
+        CreateCheckBox(MacroNames.Food, "Disable Food Macro", "Whether or not we should create a macro for Food.", MacrosCategory, false)
+        CreateCheckBox(MacroNames.Drink, "Disable Drink Macro", "Whether or not we should create a macro for Drink.", MacrosCategory, false)
+        CreateCheckBox(MacroNames.BuffFood, "Disable BuffFood Macro", "Whether or not we should create a macro for BuffFood.", MacrosCategory, false)
+        CreateCheckBox(MacroNames.Potion, "Disable Potion Macro", "Whether or not we should create a macro for Potion.", MacrosCategory, false)
+        CreateCheckBox(MacroNames.ManaPotion, "Disable Mana Potion Macro", "Whether or not we should create a macro for Mana Potion.", MacrosCategory, false)
+        CreateCheckBox(MacroNames.Grenade, "Disable Grenade Macro", "Whether or not we should create a macro for Grenades.", MacrosCategory, false)
 
         CreateCheckBox("IzC_IAC_Debug", "Debug Mode", "Print debug statements?", debugCategory, false)
     end
@@ -547,13 +564,14 @@ function IzC_AC:CreateSettings()
 end
 
 IzCAutoConsumables_Defaults = {
-    ["IzC_IAC_"..MacroNames.Healthstone] = false,
-    ["IzC_IAC_"..MacroNames.Food] = false,
-    ["IzC_IAC_"..MacroNames.Bandage] = false,
-    ["IzC_IAC_"..MacroNames.Drink] = false,
-    ["IzC_IAC_"..MacroNames.BuffFood] = false,
-    ["IzC_IAC_"..MacroNames.Potion] = false,
-    ["IzC_IAC_"..MacroNames.ManaPotion] = false,
+    [MacroNames.Healthstone] = false,
+    [MacroNames.Food] = false,
+    [MacroNames.Bandage] = false,
+    [MacroNames.Drink] = false,
+    [MacroNames.BuffFood] = false,
+    [MacroNames.Potion] = false,
+    [MacroNames.ManaPotion] = false,
+    [MacroNames.Grenade] = true,
     ["IzC_IAC_PrioConjured"] = true,
     ["IzC_IAC_PrioFestivalDumplings"] = false,
     ["IzC_IAC_PrioMannaBiscuit"] = false,

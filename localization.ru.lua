@@ -20,4 +20,5 @@ if GetLocale() == "ruRU" then
     L["Festival Dumplings"] = "Праздничные клецки";
     L["Enriched Manna Biscuit"] = "Витаминизированное печенье из манны";
     L["increases your Stamina by"] = "повышение выносливости на";
+    L['Inflicts %d+ to %d+ Fire damage'] = "Нанесение %d+ to %d+ ед";
 end

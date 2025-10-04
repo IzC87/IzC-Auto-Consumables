@@ -213,14 +213,14 @@ function IzC_AC:CheckForBestFit(cachedItem, bestConsumables)
 
             local exitEarly = false;
 
-            if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or not bestConsumables[MacroNames.Food] or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Food] and not string.match(bestConsumables[MacroNames.Food].ItemName, L['Conjured']))) then
+            if IzC_AC:AllowedToPrio(bestConsumables[MacroNames.Food]) then
                 IzC_AC:PrintDebug("Prioritize Festival Dumplings for Food")
                 bestConsumables[MacroNames.Food] = cachedItem;
                 exitEarly = true;
             end
 
-            if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or not bestConsumables[MacroNames.Drink] or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Drink] and not string.match(bestConsumables[MacroNames.Drink].ItemName, L['Conjured']))) then
-                IzC_AC:PrintDebug("Prioritize Festival Dumplings for Food")
+            if IzC_AC:AllowedToPrio(bestConsumables[MacroNames.Drink]) then
+                IzC_AC:PrintDebug("Prioritize Festival Dumplings for Drink")
                 bestConsumables[MacroNames.Drink] = cachedItem;
                 exitEarly = true;
             end
@@ -244,14 +244,14 @@ function IzC_AC:CheckForBestFit(cachedItem, bestConsumables)
 
             local exitEarly = false;
 
-            if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or not bestConsumables[MacroNames.Food] or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Food] and not string.match(bestConsumables[MacroNames.Food].ItemName, L['Conjured']))) then
+            if IzC_AC:AllowedToPrio(bestConsumables[MacroNames.Food]) then
                 IzC_AC:PrintDebug("Prioritize Enriched Manna Biscuit for Food")
                 bestConsumables[MacroNames.Food] = cachedItem;
                 exitEarly = true;
             end
 
-            if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false or not bestConsumables[MacroNames.Drink] or (IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured and bestConsumables[MacroNames.Drink] and not string.match(bestConsumables[MacroNames.Drink].ItemName, L['Conjured']))) then
-                IzC_AC:PrintDebug("Prioritize Enriched Manna Biscuit for Food")
+            if IzC_AC:AllowedToPrio(bestConsumables[MacroNames.Drink]) then
+                IzC_AC:PrintDebug("Prioritize Enriched Manna Biscuit for Drink")
                 bestConsumables[MacroNames.Drink] = cachedItem;
                 exitEarly = true;
             end
@@ -264,6 +264,37 @@ function IzC_AC:CheckForBestFit(cachedItem, bestConsumables)
         -- Keep Enriched Manna Biscuit if already selected before
         if bestConsumables[cachedItem.Consumable] and string.match(bestConsumables[cachedItem.Consumable].ItemName, L['Enriched Manna Biscuit']) then
             IzC_AC:PrintDebug("Prioritize already selected Enriched Manna Biscuit food "..bestConsumables[cachedItem.Consumable].ItemName.." over "..cachedItem.ItemName.." For Consumable: "..cachedItem.Consumable)
+            return;
+        end
+    end
+
+    -- Prioritize Harvest and Winter Veil Food
+    if (IzCAutoConsumables_SavedVars.IzC_IAC_PrioHarvestWinterFood) then
+        if (string.match(cachedItem.ItemName, L["Harvest"])) then
+            IzC_AC:PrintDebug("Prioritize Harvest / Winter Veil food")
+
+            local exitEarly = false;
+
+            if cachedItem.Consumable == MacroNames.Food and IzC_AC:AllowedToPrio(bestConsumables[MacroNames.Food]) then
+                IzC_AC:PrintDebug("Prioritize Harvest / Winter Veil for Food")
+                bestConsumables[MacroNames.Food] = cachedItem;
+                exitEarly = true;
+            end
+            
+            if cachedItem.Consumable == MacroNames.Drink and IzC_AC:AllowedToPrio(bestConsumables[MacroNames.Drink]) then
+                IzC_AC:PrintDebug("Prioritize Harvest / Winter Veil for Drink")
+                bestConsumables[MacroNames.Drink] = cachedItem;
+                exitEarly = true;
+            end
+
+            if (exitEarly == true) then
+                return;
+            end
+        end
+
+        -- Keep Harvest and Winter Food if already selected before
+        if bestConsumables[cachedItem.Consumable] and string.match(bestConsumables[cachedItem.Consumable].ItemName, L['Harvest']) then
+            IzC_AC:PrintDebug("Prioritize already selected Harvest and Winter Veil food "..bestConsumables[cachedItem.Consumable].ItemName.." over "..cachedItem.ItemName.." For Consumable: "..cachedItem.Consumable)
             return;
         end
     end
@@ -290,6 +321,24 @@ function IzC_AC:CheckForBestFit(cachedItem, bestConsumables)
         bestConsumables[cachedItem.Consumable] = cachedItem;
         return;
     end
+end
+
+-- 
+
+function IzC_AC:AllowedToPrio(currentBestConsumable)
+    if IzCAutoConsumables_SavedVars.IzC_IAC_PrioConjured == false then
+        return true;
+    end
+
+    if not currentBestConsumable then
+        return true;
+    end
+    
+    if not string.match(currentBestConsumable.ItemName, L['Conjured']) then
+        return true;
+    end
+    
+    return false;
 end
 
 function IzC_AC:GetPossibleMatchFromTooltip(item)
@@ -321,7 +370,7 @@ function IzC_AC:GetPossibleMatchFromTooltip(item)
                     possibleMatch.Consumable = MacroNames.BuffFood;
                     IzC_AC:PrintDebug("Buff Food: "..item["itemName"])
                     return possibleMatch;
-                elseif string.match(text, L['Use: Restores %d+ mana over']) then
+                elseif string.match(text, L['Use: Restores %d+ mana over']) or string.match(text, L['Use: Restores %d+%% of your mana']) then
                     possibleMatch.Consumable = MacroNames.Drink;
                     IzC_AC:PrintDebug("Drink: "..item["itemName"])
                     return possibleMatch;
@@ -545,6 +594,7 @@ function IzC_AC:CreateSettings()
         CreateCheckBox("IzC_IAC_PrioConjured", "Prioritize Conjured Food", "Prioritize using Conjured consumables regardless of their level.", MainCategory, false)
         CreateCheckBox("IzC_IAC_PrioFestivalDumplings", "Prioritize Festival Dumplings", "Prioritize using Festival Dumplings.", MainCategory, false)
         CreateCheckBox("IzC_IAC_PrioMannaBiscuit", "Prioritize Enriched Manna Biscuit", "Prioritize using Enriched Manna Biscuit.", MainCategory, false)
+        CreateCheckBox("IzC_IAC_PrioHarvestWinterFood", "Prioritize Harvest and Winter Veil Food", "Prioritize using Harvest and Winter Veil Food.", MainCategory, false)
         CreateCheckBox("IzC_IAC_EatRawFish", "Eat raw fish", "Whether or not we should allow eating of raw fish.", MainCategory, false)
 
         CreateCheckBox(MacroNames.Healthstone, "Disable Healthstone Macro", "Whether or not we should create a macro for Healthstone.", MacrosCategory, false)
@@ -572,6 +622,7 @@ IzCAutoConsumables_Defaults = {
     [MacroNames.ManaPotion] = false,
     [MacroNames.Grenade] = true,
     ["IzC_IAC_PrioConjured"] = true,
+    ["IzC_IAC_PrioHarvestWinterFood"] = false,
     ["IzC_IAC_PrioFestivalDumplings"] = false,
     ["IzC_IAC_PrioMannaBiscuit"] = false,
     ["IzC_IAC_EatRawFish"] = false,

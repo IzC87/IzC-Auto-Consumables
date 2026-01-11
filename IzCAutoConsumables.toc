@@ -11,3 +11,4 @@ IzCAutoConsumables.lua
 
 localization.core.lua
 localization.de.lua
+localization.ru.lua
